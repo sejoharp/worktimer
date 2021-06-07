@@ -1,0 +1,17 @@
+{:tasks
+ {:requires ([babashka.fs :as fs]
+             [clojure.string :as str])
+  :init     (do
+              (def binary (str (System/getenv "HOME") "/bin/worktimer"))
+              (defn filename-replace [content]
+                (str/replace content "workingtimes-test" "workingtimes"))
+              (defn write [content] (spit binary content)))
+
+  release   {:doc  "replaces test destination and copies script to bin directory"
+             :task (do (->> "src/worktime/core.clj"
+                         slurp
+                         filename-replace
+                         write)
+                       (shell (str "chmod +x " binary)))}
+  }
+ }

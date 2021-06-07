@@ -9,8 +9,5 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 /.prepl-port
-.hgignore
-.hg/
 /.idea
 worktime.iml
-.hgignore
