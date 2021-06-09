@@ -6,6 +6,7 @@
          '[clojure.pprint :as pretty])
 
 (def home-path (System/getenv "HOME"))
+(def version "active-development")
 (def file-path (str home-path "/workingtimes-test"))
 (def now (java.time.ZonedDateTime/now))
 (def now-time (->> (java.time.format.DateTimeFormatter/ofPattern "HH:mm:ss")
@@ -41,6 +42,7 @@
         "  start    Start working (persist starting time)"
         "  stop     Stop working (persist stoping time)"
         "  status   show the logged periods"
+        "  version   show corresponding commit id"
         "  help     show this"
         ""]
        (string/join \newline)
@@ -64,6 +66,7 @@
       "start" (start! file-path)
       "stop" (stop! file-path)
       "status" (status file-path)
+      "version" (println (str "worktimer version: " version))
       "help" (usage)
       (usage)
       )))

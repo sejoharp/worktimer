@@ -1,16 +1,23 @@
 {:tasks
  {:requires ([babashka.fs :as fs]
-             [clojure.string :as str])
+             [clojure.string :as str]
+             [clojure.java.shell :as shell])
   :init     (do
               (def binary (str (System/getenv "HOME") "/bin/worktimer"))
-              (defn filename-replace [content]
+              (def current-commit-id (->> (shell/sh "git" "rev-parse" "HEAD")
+                                       :out
+                                       str/trim-newline))
+              (defn replace-filename [content]
                 (str/replace content "workingtimes-test" "workingtimes"))
+              (defn replace-version [content]
+                (str/replace content "active-development" current-commit-id))
               (defn write [content] (spit binary content)))
 
   release   {:doc  "replaces test destination and copies script to bin directory"
              :task (do (->> "src/worktime/core.clj"
                          slurp
-                         filename-replace
+                         replace-filename
+                         replace-version
                          write)
                        (shell (str "chmod +x " binary)))}
   }
