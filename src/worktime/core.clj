@@ -1,5 +1,3 @@
-#!/usr/bin/env bb
-
 (require '[clojure.tools.cli :refer [parse-opts]]
          '[clojure.string :as string]
          '[clojure.java.io :as jio]

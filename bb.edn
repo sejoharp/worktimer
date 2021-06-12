@@ -3,6 +3,7 @@
              [clojure.string :as str]
              [clojure.java.shell :as shell])
   :init     (do
+              (def shebang "#!/usr/bin/env bb\n")
               (def binary (str (System/getenv "HOME") "/bin/worktimer"))
               (def current-commit-id (->> (shell/sh "git" "rev-parse" "HEAD")
                                        :out
@@ -18,6 +19,7 @@
                          slurp
                          replace-filename
                          replace-version
+                         (str shebang)
                          write)
                        (shell (str "chmod +x " binary)))}
   }
