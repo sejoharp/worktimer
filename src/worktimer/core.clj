@@ -1,11 +1,10 @@
-(require '[clojure.tools.cli :refer [parse-opts]]
-         '[clojure.string :as string]
-         '[clojure.java.io :as jio]
-         '[clojure.pprint :as pretty])
+(ns worktimer.core
+  (:require [clojure.string :as string]
+            [clojure.java.io :as jio]
+            [clojure.pprint :as pretty]
+            [worktimer.config :as config])
+  (:gen-class))
 
-(def home-path (System/getenv "HOME"))
-(def version "active-development")
-(def file-path (str home-path "/workingtimes-test"))
 (def now (java.time.ZonedDateTime/now))
 (def now-time (->> (java.time.format.DateTimeFormatter/ofPattern "HH:mm:ss")
                    (#(.format now %))))
@@ -58,15 +57,13 @@
         work-timings-with-line (conj work-timings line)]
     (write! work-timings-with-line path)))
 
-(defn main []
-  (let [argument (first *command-line-args*)]
+(defn -main [& args]
+  (let [argument (first args)]
     (case argument
-      "start" (start! file-path)
-      "stop" (stop! file-path)
-      "status" (status file-path)
-      "version" (println (str "worktimer version: " version))
+      "start" (start! config/file-path)
+      "stop" (stop! config/file-path)
+      "status" (status config/file-path)
+      "version" (println (str "worktimer version: " config/version))
       "help" (usage)
       (usage)
       )))
-
-(main)

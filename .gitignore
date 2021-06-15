@@ -11,3 +11,5 @@ pom.xml.asc
 /.prepl-port
 /.idea
 /worktimer.iml
+worktimer.build_artifacts.txt
+/.cpcache

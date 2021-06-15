@@ -1,26 +1,59 @@
 {:tasks
- {:requires ([babashka.fs :as fs]
-             [clojure.string :as str]
-             [clojure.java.shell :as shell])
-  :init     (do
-              (def shebang "#!/usr/bin/env bb\n")
-              (def binary (str (System/getenv "HOME") "/bin/worktimer"))
-              (def current-commit-id (->> (shell/sh "git" "rev-parse" "HEAD")
-                                       :out
-                                       str/trim-newline))
-              (defn replace-filename [content]
-                (str/replace content "workingtimes-test" "workingtimes"))
-              (defn replace-version [content]
-                (str/replace content "active-development" current-commit-id))
-              (defn write [content] (spit binary content)))
+ {:requires    ([babashka.fs :as fs]
+                [clojure.string :as str]
+                [clojure.java.shell :as shell])
+  :init        (do
+                 (def binary (str (System/getenv "HOME") "/bin/worktimer"))
+                 (def config "src/worktimer/config.clj")
+                 (def current-commit-id (->> (shell/sh "git" "rev-parse" "HEAD")
+                                          :out
+                                          str/trim-newline))
+                 (defn replace-filename [content]
+                   (str/replace content "workingtimes-test" "workingtimes"))
+                 (defn replace-version [content]
+                   (str/replace content "active-development" current-commit-id))
+                 (defn write [content] (spit config content)))
 
-  release   {:doc  "replaces test destination and copies script to bin directory"
-             :task (do (->> "src/worktime/core.clj"
-                         slurp
-                         replace-filename
-                         replace-version
-                         (str shebang)
-                         write)
-                       (shell (str "chmod +x " binary)))}
-  }
- }
+  release      {:doc  "Replace test destination and copies script to bin directory"
+                :task (do (->> config
+                            slurp
+                            replace-filename
+                            replace-version
+                            write)
+                          (shell "bb native-image"))}
+
+  install      {:doc  "Install the binary to $HOME/bin directory"
+                :depends [release]
+                :task (do
+                        (shell "chmod +x worktimer")
+                        (shell (str "mv worktimer " binary)))}
+
+  run-main     {:doc  "Run main"
+                :task (apply clojure "-M -m worktimer.core " *command-line-args*)}
+  uberjar      {:doc  "Builds uberjar"
+                :task (when (seq (fs/modified-since "worktimer.jar" "src"))
+                        (clojure "-X:uberjar"))}
+  run-uber     {:doc     "Run uberjar"
+                :depends [uberjar]
+                :task    (apply shell "java -jar worktimer.jar" *command-line-args*)}
+  graalvm      {:doc "Checks GRAALVM_HOME env var"
+                :task
+                     (let [env (System/getenv "GRAALVM_HOME")]
+                       (assert "Set GRAALVM_HOME")
+                       env)}
+  native-image {:doc     "Builds native image"
+                :depends [graalvm uberjar]
+                :task    (do
+                           (shell (str (fs/file graalvm
+                                         "bin"
+                                         "gu"))
+                             "install" "native-image")
+                           (shell (str (fs/file graalvm
+                                         "bin"
+                                         "native-image"))
+                             "-H:Name=worktimer"
+                             "-jar" "worktimer.jar"
+                             "--initialize-at-build-time"
+                             "--no-fallback"
+                             "--no-server"))}}}
+
