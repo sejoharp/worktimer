@@ -6,14 +6,18 @@
   (:gen-class))
 
 (defn now [] (java.time.ZonedDateTime/now))
-(defn now-time [] (->> (java.time.format.DateTimeFormatter/ofPattern "HH:mm:ss")
-                   (#(.format (now) %))))
-(defn now-date [] (->> (java.time.format.DateTimeFormatter/ofPattern "YYYY-MM-dd")
-                   (#(.format (now) %))))
+
+(defn date-time-from-pattern [pattern]
+  (->> (java.time.format.DateTimeFormatter/ofPattern pattern)
+       (#(.format (now) %))))
+
+(defn now-time [] (date-time-from-pattern "HH:mm:ss"))
+(defn now-date [] (date-time-from-pattern "YYYY-MM-dd"))
+
 
 (defn status-line [status]
-  {:date   now-date
-   :time   now-time
+  {:date   (now-date)
+   :time   (now-time)
    :status status})
 
 (defn read-work-timings [path]
