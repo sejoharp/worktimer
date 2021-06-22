@@ -5,11 +5,13 @@
             [worktimer.config :as config])
   (:gen-class))
 
-(defn now [] (java.time.ZonedDateTime/now))
+(defn now [] (java.time.LocalDateTime/now))
 
 (defn date-time-from-pattern [pattern]
-  (->> (java.time.format.DateTimeFormatter/ofPattern pattern)
-       (#(.format (now) %))))
+  (->> pattern
+       java.time.format.DateTimeFormatter/ofPattern
+       (#(.format ^java.time.format.DateTimeFormatter % (now)))))
+
 
 (defn now-time [] (date-time-from-pattern "HH:mm:ss"))
 (defn now-date [] (date-time-from-pattern "YYYY-MM-dd"))
